@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Clicker Game</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: background-color 0.2s;
+      background: #fff;
+    }
+    body.flash { background-color: #eaffea; }
+
+    /* ===== Скрины ===== */
+    .screen {
+      width: 100%;
+      height: 100%;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 14px;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .screen.active { display: flex; }
+
+    /* ===== Заголовок ===== */
+    .title {
+      font-size: 46px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      margin: 0;
+      line-height: 1.1;
+      user-select: none;
+    }
+    .title span { display: inline-block; }
+    .c1 { color: #4285F4; } /* blue */
+    .c2 { color: #EA4335; } /* red */
+    .c3 { color: #FBBC05; } /* yellow */
+    .c4 { color: #34A853; } /* green */
+
+    /* ===== Описание ===== */
+    .description {
+      max-width: 560px;
+      font-size: 18px;
+      color: #444;
+      line-height: 1.45;
+      margin: 6px 0 8px;
+    }
+
+    /* ===== Картинка + анимация ===== */
+    .hamster {
+      width: 220px;
+      height: 220px;
+      object-fit: cover;
+      border-radius: 16px;
+      user-select: none;
+      -webkit-user-drag: none;
+      animation: bob 1.2s infinite ease-in-out;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    }
+    @keyframes bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    /* ===== Кнопки ===== */
+    .btn {
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .btn-start {
+      padding: 16px 40px;
+      font-size: 22px;
+      background: #111;
+      color: #fff;
+    }
+    .btn-start:hover { opacity: 0.92; }
+
+    .btn-click {
+      width: 320px;
+      height: 160px;
+      font-size: 44px;
+      background: #e53935;
+      color: #fff;
+      border-radius: 26px;
+      font-weight: 900;
+    }
+    .btn-click:hover { background: #d32f2f; }
+    .btn-click:active { transform: scale(0.985); }
+
+    /* ===== Инфо ===== */
+    .info {
+      color: #444;
+      font-size: 18px;
+      line-height: 1.35;
+      margin-bottom: 8px;
+    }
+    .info strong { font-size: 26px; color: #111; }
+
+    /* ===== Модалка ===== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+    .modal-backdrop.show { display: flex; }
+
+    .modal {
+      width: min(420px, 92vw);
+      background: #fff;
+      border-radius: 16px;
+      padding: 22px 18px;
+      text-align: center;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.25);
+      animation: popIn 0.22s ease-out;
+    }
+
+    .modal h2 { margin: 0 0 10px; }
+    .modal p { margin: 10px 0 16px; font-size: 20px; }
+
+    .btn-close {
+      padding: 10px 18px;
+      font-size: 16px;
+      background: #e0e0e0;
+      color: #333;
+      border-radius: 10px;
+      cursor: pointer;
+      border: none;
+      font-weight: 900;
+    }
+    .btn-close:hover { background: #d5d5d5; }
+
+    @keyframes popIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- START SCREEN -->
+  <section id="startScreen" class="screen active">
+    <h1 class="title" aria-label="Clicker Game">
+      <span class="c1">C</span><span class="c2">l</span><span class="c3">i</span><span class="c1">c</span><span class="c4">k</span><span class="c2">e</span><span class="c3">r</span>
+      <span>&nbsp;</span>
+      <span class="c1">G</span><span class="c2">a</span><span class="c3">m</span><span class="c4">e</span>
+    </h1>
+
+    <!-- Хомяк -->
+    <img class="hamster" src="./hamster.png" alt="Hamster" />
+
+    <p class="description">
+      Переможе той, хто зможе натиснути кнопку <b>CLICK</b> якомога більше разів за <b>10 секунд</b>.<br/>
+      Перевір свою швидкість та реакцію!
+    </p>
+
+    <button id="startBtn" class="btn btn-start">START</button>
+  </section>
+
+  <!-- Игровой экран -->
+  <section id="gameScreen" class="screen">
+    <h1 class="title" aria-label="Clicker Game">
+      <span class="c1">C</span><span class="c2">l</span><span class="c3">i</span><span class="c1">c</span><span class="c4">k</span><span class="c2">e</span><span class="c3">r</span>
+      <span>&nbsp;</span>
+      <span class="c1">G</span><span class="c2">a</span><span class="c3">m</span><span class="c4">e</span>
+    </h1>
+
+    <div class="info">
+      Score: <strong><span id="score">0</span></strong><br/>
+      Time left: <span id="time">10</span> sec
+    </div>
+
+    <button id="clickBtn" class="btn btn-click">CLICK!</button>
+  </section>
+
+  <!-- Результат модалки -->
+  <div id="modalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <h2>Гру завершено ✅</h2>
+      <p>Ваш бал: <b><span id="finalScore">0</span></b></p>
+      <button id="closeBtn" class="btn-close">Закрити</button>
+    </div>
+  </div>
+
+  <script>
+    const startScreen = document.getElementById("startScreen");
+    const gameScreen  = document.getElementById("gameScreen");
+
+    const startBtn = document.getElementById("startBtn");
+    const clickBtn = document.getElementById("clickBtn");
+
+    const scoreEl = document.getElementById("score");
+    const timeEl  = document.getElementById("time");
+
+    const modalBackdrop = document.getElementById("modalBackdrop");
+    const finalScoreEl  = document.getElementById("finalScore");
+    const closeBtn      = document.getElementById("closeBtn");
+
+    let score = 0;
+    let timeLeft = 10;
+    let timerId = null;
+    let gameActive = false;
+
+    // ===== Звук 8 бит =====
+    let audioCtx = null;
+
+    function ensureAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+    }
+
+    function playBeep(freq = 880, durationMs = 60) {
+      if (!audioCtx) return;
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = "square";
+      osc.frequency.value = freq;
+
+      const now = audioCtx.currentTime;
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.12, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + durationMs / 1000);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now);
+      osc.stop(now + durationMs / 1000);
+    }
+
+    function playEndJingle() {
+      ensureAudio();
+      [784, 659, 523].forEach((n, i) => setTimeout(() => playBeep(n, 120), i * 140));
+    }
+
+    function showScreen(screen) {
+      startScreen.classList.remove("active");
+      gameScreen.classList.remove("active");
+      screen.classList.add("active");
+    }
+
+    function flash() {
+      document.body.classList.add("flash");
+      setTimeout(() => document.body.classList.remove("flash"), 200);
+    }
+
+    function openModal() {
+      finalScoreEl.textContent = String(score);
+      modalBackdrop.classList.add("show");
+    }
+
+    function closeModal() {
+      modalBackdrop.classList.remove("show");
+    }
+
+    function resetGameState() {
+      score = 0;
+      timeLeft = 10;
+      scoreEl.textContent = "0";
+      timeEl.textContent = "10";
+      gameActive = false;
+
+      if (timerId) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+    }
+
+    function startGame() {
+      resetGameState();
+      gameActive = true;
+
+      showScreen(gameScreen);
+      clickBtn.disabled = false;
+
+      timerId = setInterval(() => {
+        timeLeft--;
+        timeEl.textContent = String(timeLeft);
+
+        if (timeLeft <= 0) {
+          clearInterval(timerId);
+          timerId = null;
+          gameActive = false;
+
+          clickBtn.disabled = true;
+          playEndJingle();
+          openModal();
+        }
+      }, 1000);
+    }
+
+    startBtn.addEventListener("click", () => {
+      ensureAudio();
+      startGame();
+    });
+
+    clickBtn.addEventListener("click", () => {
+      ensureAudio();
+      if (!gameActive) return;
+
+      score++;
+      scoreEl.textContent = String(score);
+
+      playBeep(880, 60);
+      flash();
+    });
+
+    // модалка закрывается ТОЛЬКО по кнопке
+    closeBtn.addEventListener("click", () => {
+      closeModal();
+      resetGameState();
+      showScreen(startScreen);
+    });
+  </script>
+</body>
+</html>
